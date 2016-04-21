@@ -25,7 +25,7 @@ class Logger
   def self.log level,message
     if @@levels.include? level
       @@semaphore.synchronize do
-        puts "[% 8s | #{Time.now}]  #{message}"% [level]
+        puts "[% 8s | #{Time.now.strftime("%Y-%m-%d %H:%M:%S.%L")} ]  #{message}"% [level]
         @@logFile.puts "[% 8s | #{Time.now}]  #{message}"% [level]
 	@@logFile.flush
       end

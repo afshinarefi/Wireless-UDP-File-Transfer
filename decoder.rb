@@ -46,7 +46,6 @@ class Decoder
         rXHandler.reportWindowLoss @windowLoss
 
         @loss+=@windowLoss
-
         Logger.log :Info,"#{"% 5d" % [@sequenceNumber/@setting.windowSize-1]} ==> #{'.'*@windowLoss}#{' '*(@setting.windowSize-@windowLoss-1)} #{@windowReceived} #{@windowRecovered} | #{@windowCodedCount} | #{@loss} , #{@totalCoded} , #{@recovered}"
         
         @editor.releaseWindow
