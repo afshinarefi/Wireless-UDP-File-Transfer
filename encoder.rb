@@ -10,14 +10,17 @@ class Encoder
     @sequenceNumber=0
     @totalPackets=totalPackets
     @tXHandler=tXHandler
+    @mergeList=[]
   end
 
   def start
     @editor.allocateWindow!
-    while @sequenceNumber<@totalPackets
+    @mergeList=(0...(@setting.windowSize-1)).to_a.sample(@tXHandler.mergeCount)
+    for @sequenceNumber in 0...@totalPackets
       if not @editor.isInWindow? @sequenceNumber
         @editor.releaseWindow
         @editor.allocateWindow!
+        @mergeList=(0...(@setting.windowSize-1)).to_a.sample(@tXHandler.mergeCount)
       end
       packet=@editor.read @sequenceNumber
       if packet[0]=='C'
@@ -27,13 +30,12 @@ class Encoder
       else
         self.encode(packet[9..-1],@sequenceNumber % @setting.windowSize)
       end
-      @sequenceNumber+=1
     end
     @editor.releaseWindow
   end
 
   def encode data, index
-    if rand<@tXHandler.mergeRatio
+    if @mergeList.include? index
       @codeHeader[index/8]|=1<<(index%8)
       i=0
       for byte in data.bytes

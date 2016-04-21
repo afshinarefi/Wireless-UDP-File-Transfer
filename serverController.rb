@@ -2,7 +2,7 @@
 
 class ServerController
 
-  attr_reader :mergeRatio
+  attr_reader :mergeCount
 
   def initialize setting
     @setting=setting
@@ -64,14 +64,14 @@ class ServerController
   end
 
   def start
-    @mergeRatio=@setting.windowSize-1
+    @mergeCount=@setting.windowSize-1
     while not @client.closed?
       info=@client.gets
       temp=info.to_f
       if temp==0
-        @mergeRatio=1/(@setting.windowSize-1).to_f
+        @mergeCount=1
       else  
-        @mergeRatio=((1.0/(temp/(@setting.windowSize-1).to_f)).floor)/(@setting.windowSize-1).to_f
+        @mergeCount=(1.0/(temp/(@setting.windowSize-1).to_f)).floor
       end
     end
   end

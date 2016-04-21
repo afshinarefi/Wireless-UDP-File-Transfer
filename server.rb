@@ -73,8 +73,8 @@ class Server
     Logger.log :Info,"Done."
   end
 
-  def mergeRatio
-    @serverController.mergeRatio
+  def mergeCount
+    @serverController.mergeCount
   end
 
 end

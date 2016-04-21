@@ -67,8 +67,8 @@ class TXHandler
     @fileSize
   end
 
-  def mergeRatio
-    @server.mergeRatio
+  def mergeCount
+    @server.mergeCount
   end
 
 end
