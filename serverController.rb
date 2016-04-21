@@ -2,6 +2,8 @@
 
 class ServerController
 
+  attr_reader :mergeRatio
+
   def initialize setting
     @setting=setting
     # Reserving Port CONTROL_PORT to wait for connections
@@ -62,14 +64,16 @@ class ServerController
   end
 
   def start
-    @lossRate=@setting.windowSize-1
+    @mergeRatio=@setting.windowSize-1
     while not @client.closed?
       info=@client.gets
-      @lossRate=info.to_f
+      temp=info.to_f
+      if temp==0
+        @mergeRatio=1/(@setting.windowSize-1).to_f
+      else  
+        @mergeRatio=((1.0/(temp/(@setting.windowSize-1).to_f)).floor)/(@setting.windowSize-1).to_f
+      end
     end
   end
 
-  def lossRate
-    @lossRate
-  end
 end

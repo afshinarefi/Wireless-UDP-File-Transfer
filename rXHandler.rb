@@ -19,8 +19,9 @@ class RXHandler
 
   # This method initializes the default values.
 
-  def initialize(setting)
+  def initialize(setting,client)
     @setting=setting
+    @client=client
     @buffer=Buffer.new(@setting)
   end
 
@@ -32,7 +33,7 @@ class RXHandler
 
   def start
     receiverThread=Thread.new {@receiver.start}
-    decoderThread=Thread.new {@decoder.start}
+    decoderThread=Thread.new {@decoder.start self}
     fileWriterThread=Thread.new {@fileWriter.start}
     receiverThread.join
     decoderThread.join
@@ -44,6 +45,10 @@ class RXHandler
     @dataPath.bind(@setting.broadcastIP,0)
     @dataPathPort=@dataPath.addr[1]
     Logger.log :Info,"Data path created on UDP port %d" % [@dataPathPort]
+  end
+
+  def reportWindowLoss windowLoss
+    Thread.new {@client.reportWindowLoss windowLoss}
   end
 
   def dataPathPort
@@ -62,13 +67,6 @@ class RXHandler
     @fileSize=fileSize
   end
 
-  def loss
-    @decoder.loss
-  end
-
-  def total
-    @decoder.total
-  end
 end
 
 __END__

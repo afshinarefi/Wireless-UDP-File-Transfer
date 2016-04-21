@@ -33,7 +33,7 @@ class Encoder
   end
 
   def encode data, index
-    if rand<(@tXHandler.lossRate/(@setting.windowSize-1))
+    if rand<@tXHandler.mergeRatio
       @codeHeader[index/8]|=1<<(index%8)
       i=0
       for byte in data.bytes

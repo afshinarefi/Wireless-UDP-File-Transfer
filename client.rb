@@ -25,23 +25,18 @@ class Client
 
   def request
     
-    @rXHandler=RXHandler.new @setting
+    @rXHandler=RXHandler.new @setting,self
     @rXHandler.initializeDataPath
     @clientController=ClientController.new @setting
     @clientController.handshakeDataInfo @rXHandler.dataPathPort
     @rXHandler.totalPackets=@clientController.totalPackets
     @rXHandler.fileSize=@clientController.fileSize
     @rXHandler.initializeHandlers
-    controlThread=Thread.new {@clientController.start self}
     @rXHandler.start
   end
 
-  def loss
-    @rXHandler.loss
-  end
-
-  def total
-    @rXHandler.total
+  def reportWindowLoss windowLoss
+    @clientController.reportWindowLoss windowLoss
   end
 
 end

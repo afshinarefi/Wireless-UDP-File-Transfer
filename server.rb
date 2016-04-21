@@ -73,8 +73,8 @@ class Server
     Logger.log :Info,"Done."
   end
 
-  def lossRate
-    @serverController.lossRate
+  def mergeRatio
+    @serverController.mergeRatio
   end
 
 end

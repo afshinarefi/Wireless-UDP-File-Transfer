@@ -67,8 +67,8 @@ class TXHandler
     @fileSize
   end
 
-  def lossRate
-    @server.lossRate
+  def mergeRatio
+    @server.mergeRatio
   end
 
 end

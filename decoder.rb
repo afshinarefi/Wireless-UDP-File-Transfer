@@ -8,7 +8,6 @@
 class Decoder
 
   attr_reader :loss
-  attr_reader :total
 
 ### Initialize general variables
   def initialize setting,totalPackets,editor
@@ -18,7 +17,6 @@ class Decoder
     @dummyBody="\0"*@setting.chunkSize
     @headerSize=(((@setting.windowSize-1)/8)+1)
     @loss=0
-    @total=0
     @recovered=0
     @totalCoded=0
   end
@@ -34,7 +32,7 @@ class Decoder
   end
 
 ### The main process of going through packets and decoding them
-  def start
+  def start rXHandler
 
     @editor.allocateWindow!
     
@@ -45,6 +43,10 @@ class Decoder
 
       if @editor.isAfterWindow? @sequenceNumber
         
+        rXHandler.reportWindowLoss @windowLoss
+
+        @loss+=@windowLoss
+
         Logger.log :Info,"#{"% 5d" % [@sequenceNumber/@setting.windowSize-1]} ==> #{'.'*@windowLoss}#{' '*(@setting.windowSize-@windowLoss-1)} #{@windowReceived} #{@windowRecovered} | #{@windowCodedCount} | #{@loss} , #{@totalCoded} , #{@recovered}"
         
         @editor.releaseWindow
@@ -75,7 +77,6 @@ class Decoder
 
       # Case we get a data packet
       elsif packet!=nil
-        @total+=1
         @windowTotal+=1
 
         # Record the receipt of this packet in the window
@@ -84,8 +85,6 @@ class Decoder
 
       # Case we miss a data packet 
       elsif (@sequenceNumber % @setting.windowSize) != (@setting.windowSize-1)
-        @loss+=1
-        @total+=1
 
         @windowTotal+=1
         @windowLoss+=1
@@ -116,9 +115,6 @@ class Decoder
       if (@codeHeader[index/8]&(1<<(index%8)))==0 and (header[index/8]&(1<<(index%8)))!=0
         count+=1
         @number=index
-        #if count>1
-        #  break
-        #end
       end
     end
     if count==1
