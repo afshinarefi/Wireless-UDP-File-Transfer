@@ -20,6 +20,7 @@ class Decoder
     @loss=0
     @total=0
     @recovered=0
+    @totalCoded=0
   end
 
 ### Initialize variables for each window
@@ -27,6 +28,9 @@ class Decoder
     @codeHeader=Array.new(((@setting.windowSize-1)/8)+1,0)
     @windowLoss=0
     @windowTotal=0
+    @windowReceived=' '
+    @windowRecovered=' '
+    @windowCodedCount=0
   end
 
 ### The main process of going through packets and decoding them
@@ -41,7 +45,7 @@ class Decoder
 
       if @editor.isAfterWindow? @sequenceNumber
         
-        Logger.log :Info,"#{"%08d" % [@sequenceNumber/@setting.windowSize]},#{@total},#{@loss},#{@recovered}"
+        Logger.log :Info,"#{"% 5d" % [@sequenceNumber/@setting.windowSize-1]} ==> #{'.'*@windowLoss}#{' '*(@setting.windowSize-@windowLoss-1)} #{@windowReceived} #{@windowRecovered} | #{@windowCodedCount} | #{@loss} , #{@totalCoded} , #{@recovered}"
         
         @editor.releaseWindow
         @editor.allocateWindow!
@@ -55,12 +59,15 @@ class Decoder
 
       # Case we get a coded packet
       if packet!=nil and packet[0]=='C'
-
+        @windowReceived='X'
+        @totalCoded+=1
         begin
           # Checking if the received coded packet is decodable
           if decodable? packet
 	          # Performing the decoding
             decode packet
+            @windowRecovered='X'
+            @recovered+=1
           end
         rescue Exception => ex
           Logger.log :Error,ex.message
@@ -69,6 +76,7 @@ class Decoder
       # Case we get a data packet
       elsif packet!=nil
         @total+=1
+        @windowTotal+=1
 
         # Record the receipt of this packet in the window
         index=@sequenceNumber % @setting.windowSize
@@ -78,6 +86,10 @@ class Decoder
       elsif (@sequenceNumber % @setting.windowSize) != (@setting.windowSize-1)
         @loss+=1
         @total+=1
+
+        @windowTotal+=1
+        @windowLoss+=1
+
         @editor.write(@sequenceNumber,("D%08x" % @sequenceNumber)+@dummyBody)
 
       # Case we miss a coded packet
@@ -94,15 +106,19 @@ class Decoder
 
 ### 
   def decodable? packet
+    @windowCodedCount=0
     header=packet[9...9+@headerSize].bytes.to_a
     count=0
     for index in 0...(@setting.windowSize-1)
+      if (header[index/8]&(1<<(index%8)))!=0
+        @windowCodedCount+=1
+      end
       if (@codeHeader[index/8]&(1<<(index%8)))==0 and (header[index/8]&(1<<(index%8)))!=0
         count+=1
         @number=index
-        if count>1
-          break
-        end
+        #if count>1
+        #  break
+        #end
       end
     end
     if count==1
@@ -113,7 +129,6 @@ class Decoder
 
 ### 
   def decode packet
-    @recovered+=1
     data=packet[9+@headerSize..-1]
     header=packet[9...9+@headerSize].bytes.to_a
     @decodedPacket=data.bytes.to_a

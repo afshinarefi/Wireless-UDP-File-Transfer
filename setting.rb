@@ -47,7 +47,7 @@ class Setting
     @chunkSize=1<<10
 
     # The size of the buffers used in the system.
-    @bufferSize=100
+    @bufferSize=49
 
     @fileName='Video.ts'
 

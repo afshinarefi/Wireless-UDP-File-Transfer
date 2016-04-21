@@ -22,23 +22,32 @@ class ClientController
   end
 
   def start client
+    begin
     lastLoss=0
     lastTotal=0
     loop do
       currentLoss=client.loss
       currentTotal=client.total
       if (currentTotal-lastTotal)==0
-        mergeCount=0
+        sleep 0.1
+        next
       else
-        mergeCount=1.0/((currentLoss-lastLoss).to_f/(currentTotal-lastTotal).to_f)
-        if mergeCount>@setting.windowSize
-          mergeCount=@setting.windowSize+1
+        if (currentLoss-lastLoss)==0
+          mergeCount=@setting.windowSize-1
+        else
+          mergeCount=(1.0/((currentLoss-lastLoss).to_f/(currentTotal-lastTotal).to_f)).floor
+        end
+        if mergeCount>=@setting.windowSize
+          mergeCount=@setting.windowSize-1
         end
       end
       @controlPath.puts "#{mergeCount}"
       lastLoss=currentLoss
       lastTotal=currentTotal
       sleep 0.1
+    end
+    rescue Exception => e 
+      Logger.log :Info,"Rescued: #{e.message}"
     end
   end
 

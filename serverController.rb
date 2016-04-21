@@ -62,7 +62,7 @@ class ServerController
   end
 
   def start
-    @lossRate=0
+    @lossRate=@setting.windowSize-1
     while not @client.closed?
       info=@client.gets
       @lossRate=info.to_f
