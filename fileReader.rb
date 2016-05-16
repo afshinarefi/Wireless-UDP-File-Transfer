@@ -13,7 +13,7 @@ class FileReader
     @fileSize=File.size(fileAddress)
     @inputFile=File.open(fileAddress,'rb')
     @totalDataPackets=((@fileSize-1)/(@setting.chunkSize))+1
-    @totalPackets=@totalDataPackets+((@totalDataPackets-1)/(@setting.windowSize-1))+1
+    @totalPackets=@totalDataPackets+(((@totalDataPackets-1)/(@setting.windowSize-@setting.codeCount))+1)*@setting.codeCount
     @editor=editor
     @sequenceNumber=0
   end
@@ -27,7 +27,7 @@ class FileReader
         @editor.releaseWindow
         @editor.allocateWindow!
       end
-      if (@sequenceNumber % @setting.windowSize) == (@setting.windowSize - 1)
+      if (@sequenceNumber % @setting.windowSize) >= (@setting.windowSize - @setting.codeCount)
         packet="C%08x" % [@sequenceNumber]
       else
         data=@inputFile.read @setting.chunkSize

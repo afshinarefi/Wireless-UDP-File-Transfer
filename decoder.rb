@@ -29,6 +29,7 @@ class Decoder
     @windowReceived=' '
     @windowRecovered=' '
     @windowCodedCount=0
+    @windowReport=''
   end
 
 ### The main process of going through packets and decoding them
@@ -42,11 +43,13 @@ class Decoder
     for @sequenceNumber in 0...@totalPackets
 
       if @editor.isAfterWindow? @sequenceNumber
-        
-        rXHandler.reportWindowLoss @windowLoss
+        if @lastWindowLoss!=@windowLoss
+          rXHandler.reportWindowLoss @windowLoss
+          @lastWindowLoss=@windowLoss
+        end
 
         @loss+=@windowLoss
-        Logger.log :Info,"#{"% 5d" % [@sequenceNumber/@setting.windowSize-1]} ==> #{'.'*@windowLoss}#{' '*(@setting.windowSize-@windowLoss-1)} #{@windowReceived} #{@windowRecovered} | #{@windowCodedCount} | #{@loss} , #{@totalCoded} , #{@recovered}"
+        Logger.log :Info,"#{"% 5d" % [@sequenceNumber/@setting.windowSize-1]} ==> #{@windowReport} | #{@windowCodedCount} | #{@loss} , #{@totalCoded} , #{@recovered}"
         
         @editor.releaseWindow
         @editor.allocateWindow!
@@ -66,9 +69,13 @@ class Decoder
           # Checking if the received coded packet is decodable
           if decodable? packet
 	          # Performing the decoding
+            @windowReport=@windowReport[0...@number]+'◊'+@windowReport[@number+1..-1]
             decode packet
+            @windowReport+='▮'
             @windowRecovered='X'
             @recovered+=1
+          else
+            @windowReport+='▯'
           end
         rescue Exception => ex
           Logger.log :Error,ex.message
@@ -82,17 +89,22 @@ class Decoder
         index=@sequenceNumber % @setting.windowSize
         @codeHeader[index/8]|=1<<(index%8)
 
+        @windowReport+='∙'
+
       # Case we miss a data packet 
-      elsif (@sequenceNumber % @setting.windowSize) != (@setting.windowSize-1)
+      elsif (@sequenceNumber % @setting.windowSize) < (@setting.windowSize-@setting.codeCount)
 
         @windowTotal+=1
         @windowLoss+=1
+
+        @windowReport+=' '
 
         @editor.write(@sequenceNumber,("D%08x" % @sequenceNumber)+@dummyBody)
 
       # Case we miss a coded packet
       else
         @editor.write(@sequenceNumber,("C%08x" % @sequenceNumber))
+        @windowReport+=' '
       end
 
     end
@@ -127,8 +139,8 @@ class Decoder
     data=packet[9+@headerSize..-1]
     header=packet[9...9+@headerSize].bytes.to_a
     @decodedPacket=data.bytes.to_a
-    base=@sequenceNumber-@setting.windowSize+1
-    for index in 0...(@setting.windowSize-1)
+    base=@sequenceNumber-(@sequenceNumber % @setting.windowSize)
+    for index in 0...(@setting.windowSize)
       if (@codeHeader[index/8]&(1<<(index%8)))!=0 and (header[index/8]&(1<<(index%8)))!=0
         i=0
         for byte in @editor.read(base+index)[9..-1].bytes
@@ -138,6 +150,7 @@ class Decoder
       end
     end
     @editor.write(base+@number,(("D%08x" % (base+@number))+@decodedPacket.pack("C*")))
+    @codeHeader[@number/8]|=1<<(@number%8)
   end
 
 end

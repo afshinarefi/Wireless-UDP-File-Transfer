@@ -64,15 +64,18 @@ class ServerController
   end
 
   def start
-    @mergeCount=@setting.windowSize-1
+    @mergeCount=@setting.windowSize-@setting.codeCount
     while not @client.closed?
       info=@client.gets
       temp=info.to_f
       if temp==0
-        @mergeCount=1
+        @mergeCount=@setting.windowSize-@setting.codeCount
       else  
-        @mergeCount=(1.0/(temp/(@setting.windowSize-1).to_f)).floor
+        @mergeCount=(1.0/(temp/(@setting.windowSize-@setting.codeCount).to_f)).floor
       end
+    end
+    if (@mergeCount*@setting.codeCount)>(@setting.windowSize-@setting.codeCount)
+      @mergeCount=(@setting.windowSize-@setting.codeCount)/@setting.codeCount
     end
   end
 

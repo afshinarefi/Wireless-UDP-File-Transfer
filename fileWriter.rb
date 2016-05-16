@@ -14,19 +14,26 @@ class FileWriter
 
   def start
     @editor.allocateWindow!
+    x=''
     while @sequenceNumber<@totalPackets
       if @editor.isAfterWindow? @sequenceNumber
         @editor.releaseWindow
         @editor.allocateWindow!
+        x=''
       end
       packet=@editor.read @sequenceNumber
       @editor.write @sequenceNumber,nil
       if packet!=nil and packet[0]=='D'
+        x+='D'
         if (@fileSize-@totalSize)<@setting.chunkSize
           @totalSize+=@outputFile.write(packet[9...(@fileSize-@totalSize+9)])
-	else
+        else
           @totalSize+=@outputFile.write(packet[9..-1])
-	end
+        end
+      elsif packet!=nil and packet[0]=='C'
+        x+='C'
+      else
+        x+='X'
       end
       @sequenceNumber+=1
     end

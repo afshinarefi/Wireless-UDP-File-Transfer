@@ -25,6 +25,7 @@ class Setting
   attr_accessor :maxTries
   attr_accessor :senderEditorCount
   attr_accessor :receiverEditorCount
+  attr_accessor :codeCount
 
   def initialize
     # The sender IP address.
@@ -34,7 +35,7 @@ class Setting
     @broadcastIP='192.168.1.255'
 
     # The client IP address who requests the transmission of the file.
-    @clientIP='192.168.1.69'
+    @clientIP='192.168.1.73'
 
     # The port on which the server listens for transmission requests.
     @controlPort=52005
@@ -55,7 +56,7 @@ class Setting
 
     @destinationDir='Disk/'
 
-    @windowSize=10
+    @windowSize=13
 
     @mergeCount=1
 
@@ -64,6 +65,8 @@ class Setting
     @senderEditorCount=3
 
     @receiverEditorCount=3
+
+    @codeCount=3
 
   end
 end
