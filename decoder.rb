@@ -28,7 +28,7 @@ class Decoder
     @windowTotal=0
     @windowReceived=' '
     @windowRecovered=' '
-    @windowCodedCount=0
+    @windowCodedCount=Array.new(@setting.codeCount,0)
     @windowReport=''
   end
 
@@ -116,12 +116,11 @@ class Decoder
 
 ### 
   def decodable? packet
-    @windowCodedCount=0
     header=packet[9...9+@headerSize].bytes.to_a
     count=0
     for index in 0...(@setting.windowSize-1)
       if (header[index/8]&(1<<(index%8)))!=0
-        @windowCodedCount+=1
+        @windowCodedCount[(@sequenceNumber+@setting.codeCount) % @setting.windowSize]+=1
       end
       if (@codeHeader[index/8]&(1<<(index%8)))==0 and (header[index/8]&(1<<(index%8)))!=0
         count+=1

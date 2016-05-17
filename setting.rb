@@ -56,7 +56,7 @@ class Setting
 
     @destinationDir='Disk/'
 
-    @windowSize=13
+    @windowSize=11
 
     @mergeCount=1
 
@@ -66,7 +66,7 @@ class Setting
 
     @receiverEditorCount=3
 
-    @codeCount=3
+    @codeCount=1
 
   end
 end
